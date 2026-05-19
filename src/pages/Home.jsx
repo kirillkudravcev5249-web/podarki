@@ -9,7 +9,7 @@ function Home() {
   const [trends, setTrends] = useState([]);
 
   useEffect(() => {
-    setTrends(getAllGifts(4));
+    getAllGifts(4).then(data => setTrends(data)).catch(() => setTrends([]));
   }, []);
 
   const handleSmartSearch = () => {

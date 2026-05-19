@@ -2,3 +2,7 @@ node_modules/
 dist/
 .env
 .DS_Store
+
+# SQLite WAL-режим (временные файлы)
+*.db-shm
+*.db-wal

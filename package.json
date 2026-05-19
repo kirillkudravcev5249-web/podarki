@@ -8,7 +8,9 @@
     "dev:backend": "node server/index.js",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run --config vitest.server.config.js",
+    "test:watch": "vitest --config vitest.server.config.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -23,6 +25,8 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
     "concurrently": "^9.2.1",
-    "vite": "^5.1.4"
+    "supertest": "^7.2.2",
+    "vite": "^5.1.4",
+    "vitest": "^4.1.6"
   }
 }
