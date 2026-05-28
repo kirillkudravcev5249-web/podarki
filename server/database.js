@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import bcrypt from 'bcryptjs';
 import { ALL_GIFTS } from './data/gifts.js';
 import { ALL_ARTICLES } from './data/articles.js';
 
@@ -98,6 +99,17 @@ export const createDb = (dbPath) => {
             }
         });
         seedArticles();
+    }
+
+    // --- Авто-создание admin-пользователя ---
+    const adminExists = db.prepare("SELECT id FROM users WHERE username = 'admin'").get();
+    if (!adminExists) {
+        const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+        const hashed = bcrypt.hashSync(adminPassword, 10);
+        db.prepare('INSERT INTO users (username, email, password) VALUES (?, ?, ?)').run(
+            'admin', 'admin@localhost', hashed
+        );
+        console.log('✓ Admin пользователь создан (admin / ' + adminPassword + ')');
     }
 
     return db;

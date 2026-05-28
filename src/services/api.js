@@ -12,8 +12,6 @@ const QUERY_TO_CATEGORY = {
 
 /**
  * Получить список подарков из бэкенда.
- * @param {string} query - Строка категории (как в CATEGORY_QUERY_MAP в Catalog.jsx)
- * @param {number} limit - Максимальное количество
  */
 export const fetchWbGifts = async (query = 'подарок', limit = 30) => {
     const category = QUERY_TO_CATEGORY[query] ?? 'all';
@@ -27,7 +25,6 @@ export const fetchWbGifts = async (query = 'подарок', limit = 30) => {
 
 /**
  * Получить несколько подарков для главной страницы.
- * @param {number} limit
  */
 export const getAllGifts = async (limit = 4) => {
     const res = await fetch(`${API_BASE}/gifts?limit=${limit}`);
@@ -37,7 +34,6 @@ export const getAllGifts = async (limit = 4) => {
 
 /**
  * Получить один подарок по ID.
- * @param {number} id
  */
 export const getGiftById = async (id) => {
     const res = await fetch(`${API_BASE}/gifts/${id}`);
@@ -65,10 +61,100 @@ export const fetchArticles = async () => {
 
 /**
  * Получить одну статью по ID.
- * @param {string} id
  */
 export const fetchArticleById = async (id) => {
     const res = await fetch(`${API_BASE}/articles/${id}`);
     if (!res.ok) throw new Error('Статья не найдена');
     return res.json();
+};
+
+// ─── Admin API ──────────────────────────────────────────────────────────────
+
+const authHeaders = (token) => ({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+});
+
+/** Создать подарок */
+export const createGift = async (data, token) => {
+    const res = await fetch(`${API_BASE}/gifts`, {
+        method: 'POST',
+        headers: authHeaders(token),
+        body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Ошибка создания подарка');
+    return json;
+};
+
+/** Обновить подарок */
+export const updateGift = async (id, data, token) => {
+    const res = await fetch(`${API_BASE}/gifts/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(token),
+        body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Ошибка обновления подарка');
+    return json;
+};
+
+/** Удалить подарок */
+export const deleteGift = async (id, token) => {
+    const res = await fetch(`${API_BASE}/gifts/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Ошибка удаления подарка');
+    return json;
+};
+
+/** Загрузить изображение */
+export const uploadImage = async (file, token) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch(`${API_BASE}/upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Ошибка загрузки изображения');
+    return json; // { url: '/uploads/...' }
+};
+
+/** Создать статью */
+export const createArticle = async (data, token) => {
+    const res = await fetch(`${API_BASE}/articles`, {
+        method: 'POST',
+        headers: authHeaders(token),
+        body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Ошибка создания статьи');
+    return json;
+};
+
+/** Обновить статью */
+export const updateArticle = async (id, data, token) => {
+    const res = await fetch(`${API_BASE}/articles/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(token),
+        body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Ошибка обновления статьи');
+    return json;
+};
+
+/** Удалить статью */
+export const deleteArticle = async (id, token) => {
+    const res = await fetch(`${API_BASE}/articles/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Ошибка удаления статьи');
+    return json;
 };

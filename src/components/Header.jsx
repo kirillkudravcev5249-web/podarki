@@ -20,6 +20,9 @@ function Header() {
           <Link to="/">Главная</Link>
           <Link to="/catalog">Каталог</Link>
           <Link to="/articles">Советы</Link>
+          {user?.username === 'admin' && (
+            <Link to="/admin" className="nav-admin-link">⚡ Admin</Link>
+          )}
         </nav>
         <div className="header-auth">
           {user ? (

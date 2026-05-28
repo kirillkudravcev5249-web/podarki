@@ -1,4 +1,5 @@
 import express from 'express';
+import { adminOnly } from '../middleware/adminOnly.js';
 
 const CATEGORIES = [
     { id: 'all',  label: 'Все' },
@@ -71,6 +72,71 @@ export const createGiftsRouter = (db) => {
         }
 
         res.json({ ...gift, stores: getStores(id) });
+    });
+
+    // POST /api/gifts — создать подарок (только admin)
+    router.post('/', adminOnly, (req, res) => {
+        const { title, brand, price, priceNum, image, category, tag, description, whyFits, stores = [] } = req.body;
+
+        if (!title) return res.status(400).json({ error: 'Название обязательно' });
+
+        const { lastInsertRowid: giftId } = db.prepare(`
+            INSERT INTO gifts (title, brand, price, priceNum, image, category, tag, description, whyFits)
+            VALUES (@title, @brand, @price, @priceNum, @image, @category, @tag, @description, @whyFits)
+        `).run({ title, brand, price, priceNum, image, category, tag, description, whyFits });
+
+        const insertStore = db.prepare(
+            'INSERT INTO gift_stores (giftId, name, status, price, url) VALUES (@giftId, @name, @status, @price, @url)'
+        );
+        for (const s of stores) {
+            insertStore.run({ giftId, name: s.name, status: s.status, price: s.price, url: s.url });
+        }
+
+        const gift = db.prepare('SELECT * FROM gifts WHERE id = ?').get(giftId);
+        res.status(201).json({ ...gift, stores: getStores(giftId) });
+    });
+
+    // PUT /api/gifts/:id — обновить подарок (только admin)
+    router.put('/:id', adminOnly, (req, res) => {
+        const id = Number(req.params.id);
+        if (isNaN(id)) return res.status(400).json({ error: 'Некорректный ID' });
+
+        const existing = db.prepare('SELECT id FROM gifts WHERE id = ?').get(id);
+        if (!existing) return res.status(404).json({ error: 'Подарок не найден' });
+
+        const { title, brand, price, priceNum, image, category, tag, description, whyFits, stores = [] } = req.body;
+
+        db.prepare(`
+            UPDATE gifts SET title=@title, brand=@brand, price=@price, priceNum=@priceNum,
+            image=@image, category=@category, tag=@tag, description=@description, whyFits=@whyFits
+            WHERE id=@id
+        `).run({ title, brand, price, priceNum, image, category, tag, description, whyFits, id });
+
+        // Пересоздаём магазины
+        db.prepare('DELETE FROM gift_stores WHERE giftId = ?').run(id);
+        const insertStore = db.prepare(
+            'INSERT INTO gift_stores (giftId, name, status, price, url) VALUES (@giftId, @name, @status, @price, @url)'
+        );
+        for (const s of stores) {
+            insertStore.run({ giftId: id, name: s.name, status: s.status, price: s.price, url: s.url });
+        }
+
+        const gift = db.prepare('SELECT * FROM gifts WHERE id = ?').get(id);
+        res.json({ ...gift, stores: getStores(id) });
+    });
+
+    // DELETE /api/gifts/:id — удалить подарок (только admin)
+    router.delete('/:id', adminOnly, (req, res) => {
+        const id = Number(req.params.id);
+        if (isNaN(id)) return res.status(400).json({ error: 'Некорректный ID' });
+
+        const existing = db.prepare('SELECT id FROM gifts WHERE id = ?').get(id);
+        if (!existing) return res.status(404).json({ error: 'Подарок не найден' });
+
+        db.prepare('DELETE FROM gift_stores WHERE giftId = ?').run(id);
+        db.prepare('DELETE FROM gifts WHERE id = ?').run(id);
+
+        res.json({ ok: true });
     });
 
     return router;
