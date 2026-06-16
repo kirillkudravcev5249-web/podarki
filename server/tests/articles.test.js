@@ -27,9 +27,9 @@ describe('Articles API', () => {
             expect(article).toHaveProperty('content');
         });
 
-        it('возвращает ровно 3 статьи (по данным сидинга)', async () => {
+        it('возвращает 10 статей (по данным сидинга)', async () => {
             const res = await request(app).get('/api/articles');
-            expect(res.body.length).toBe(3);
+            expect(res.body.length).toBe(10);
         });
 
         it('excerpt не пустой', async () => {

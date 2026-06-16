@@ -87,19 +87,16 @@ export const createDb = (dbPath) => {
         seedGifts();
     }
 
-    // --- Сидинг статей ---
-    const { count: articleCount } = db.prepare('SELECT COUNT(*) as count FROM articles').get();
-    if (articleCount === 0) {
-        const insertArticle = db.prepare(`
-            INSERT INTO articles (id, title, excerpt, content) VALUES (@id, @title, @excerpt, @content)
-        `);
-        const seedArticles = db.transaction(() => {
-            for (const a of ALL_ARTICLES) {
-                insertArticle.run(a);
-            }
-        });
-        seedArticles();
-    }
+    // --- Сидинг статей (добавляем только отсутствующие) ---
+    const insertArticle = db.prepare(`
+        INSERT OR IGNORE INTO articles (id, title, excerpt, content) VALUES (@id, @title, @excerpt, @content)
+    `);
+    const seedArticles = db.transaction(() => {
+        for (const a of ALL_ARTICLES) {
+            insertArticle.run(a);
+        }
+    });
+    seedArticles();
 
     // --- Авто-создание admin-пользователя ---
     const adminExists = db.prepare("SELECT id FROM users WHERE username = 'admin'").get();

@@ -1,24 +1,23 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ARTICLES } from '../data';
+import { fetchArticleById } from '../services/api';
 
 function ArticleDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  const article = ARTICLES.find(a => a.id === id);
+  const [article, setArticle] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  if (!article) {
-    return (
-      <div style={{ textAlign: 'center', padding: '100px 0' }}>
-        <h2>Статья не найдена</h2>
-        <button className="btn btn-primary" onClick={() => navigate('/articles')} style={{ marginTop: '20px' }}>
-          Вернуться к советам
-        </button>
-      </div>
-    );
-  }
+  useEffect(() => {
+    setLoading(true);
+    setNotFound(false);
+    fetchArticleById(id)
+      .then(data => setArticle(data))
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false));
+  }, [id]);
 
-  // Простой парсер для жирного текста **текст**
   const parseMarkdown = (text) => {
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
@@ -28,6 +27,25 @@ function ArticleDetail() {
       return part;
     });
   };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--text-secondary)' }}>
+        Загрузка статьи...
+      </div>
+    );
+  }
+
+  if (notFound || !article) {
+    return (
+      <div style={{ textAlign: 'center', padding: '100px 0' }}>
+        <h2>Статья не найдена</h2>
+        <button className="btn btn-primary" onClick={() => navigate('/articles')} style={{ marginTop: '20px' }}>
+          Вернуться к советам
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>

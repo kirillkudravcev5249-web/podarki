@@ -11,16 +11,26 @@ const QUERY_TO_CATEGORY = {
 };
 
 /**
- * Получить список подарков из бэкенда.
+ * Получить список подарков из бэкенда с фильтрами.
  */
-export const fetchWbGifts = async (query = 'подарок', limit = 30) => {
-    const category = QUERY_TO_CATEGORY[query] ?? 'all';
-    const params = new URLSearchParams({ limit });
-    if (category !== 'all') params.set('category', category);
+export const fetchGifts = async ({ category, minPrice, maxPrice, search, limit = 30 } = {}) => {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (category && category !== 'all') params.set('category', category);
+    if (minPrice !== undefined && minPrice !== '') params.set('minPrice', String(minPrice));
+    if (maxPrice !== undefined && maxPrice !== '') params.set('maxPrice', String(maxPrice));
+    if (search) params.set('search', search);
 
     const res = await fetch(`${API_BASE}/gifts?${params}`);
     if (!res.ok) throw new Error('Ошибка загрузки подарков');
     return res.json();
+};
+
+/**
+ * Получить список подарков из бэкенда (legacy-обёртка для каталога).
+ */
+export const fetchWbGifts = async (query = 'подарок', limit = 30) => {
+    const category = QUERY_TO_CATEGORY[query] ?? 'all';
+    return fetchGifts({ category, limit });
 };
 
 /**

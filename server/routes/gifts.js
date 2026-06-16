@@ -41,9 +41,9 @@ export const createGiftsRouter = (db) => {
             params.push(Number(maxPrice));
         }
         if (search) {
-            query += ' AND (title LIKE ? OR brand LIKE ? OR description LIKE ?)';
+            query += ' AND (title LIKE ? OR brand LIKE ? OR description LIKE ? OR whyFits LIKE ? OR tag LIKE ?)';
             const s = `%${search}%`;
-            params.push(s, s, s);
+            params.push(s, s, s, s, s);
         }
 
         query += ' LIMIT ?';
